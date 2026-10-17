@@ -3,208 +3,719 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MEMORA — 3D Cybernetic Buffer Pool Manager</title>
+  <title>MEMORA — Saviours of Memory | Workload-Aware Adaptive Buffer Pool</title>
+  
+  <!-- Typography: Instrument Serif (Editorial Display), Inter Tight (Architectural Sans), JetBrains Mono (Telemetry) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter+Tight:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="style.css">
-  <!-- Three.js and OrbitControls -->
+  
+  <!-- Three.js WebGL & OrbitControls -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <!-- Chart.js for real-time telemetry analysis -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
-<body>
+<body class="theme-obsidian">
 
-  <!-- 3D WebGL Canvas Layer -->
+  <!-- ================================================================
+       3D WebGL Canvas Layer
+       Hardware-accelerated computational buffer matrix visualization
+  ================================================================ -->
   <div id="canvas-container"></div>
-  <div class="vignette"></div>
+  <div class="subtle-film-grain"></div>
+  <div class="vignette-radial"></div>
 
-  <!-- Top Navigation & Global Telemetry Header -->
+  <!-- Interactive 3D Frame Inspector Popover (Raycasted on frame hover/click) -->
+  <div id="frame-inspector" class="frame-inspector hidden">
+    <div class="inspector-header">
+      <span class="inspector-tag">[ FRAME // RESIDENT ]</span>
+      <span class="inspector-id" id="ins-frame-id">SLOT 00</span>
+    </div>
+    <div class="inspector-grid">
+      <div class="ins-item"><span class="ins-label">PAGE ID</span><span class="ins-val" id="ins-page-id">NULL</span></div>
+      <div class="ins-item"><span class="ins-label">DIRTY BIT</span><span class="ins-val" id="ins-dirty-bit">CLEAN</span></div>
+      <div class="ins-item"><span class="ins-label">ACCESS COUNT</span><span class="ins-val" id="ins-access-count">0</span></div>
+      <div class="ins-item"><span class="ins-label">EVICTION RISK</span><span class="ins-val" id="ins-eviction-risk">LOW</span></div>
+    </div>
+    <div class="ins-footer" id="ins-policy-status">Governed by Active Policy</div>
+  </div>
+
+  <!-- ================================================================
+       TOP NAVIGATION & SYSTEM METADATA HEADER
+       Clean architectural bar with live policy telemetry & direct actions
+  ================================================================ -->
   <header class="top-nav">
-    <div class="brand">
-      <div class="brand-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    <div class="brand-cluster">
+      <div class="brand-monogram">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+          <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+          <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+          <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+          <circle cx="12" cy="12" r="2.5" fill="currentColor"></circle>
+        </svg>
       </div>
-      <div class="brand-title">MEMORA <span>3D</span></div>
-      <div class="brand-badge">Saviours of Memory</div>
+      <div class="brand-headings">
+        <div class="brand-title">MEMORA <span class="edition-tag">RESEARCH ENGINE</span></div>
+        <div class="brand-subtitle"><em>Saviours of Memory</em> — Workload-Aware Adaptive Buffer Pool</div>
+      </div>
+      <div class="spec-badge">[SPEC.ACADEMIC // PG17-VALIDATED]</div>
     </div>
 
-    <div class="status-pills">
-      <div class="pill">
-        <span class="indicator purple" id="status-policy-dot"></span>
-        <span>Active Policy: <strong id="status-policy-text" style="color:var(--purple-neon)">LRU</strong></span>
+    <!-- Live Telemetry Status Badges -->
+    <div class="telemetry-badges">
+      <!-- Active Eviction Policy -->
+      <div class="spec-pill" title="The current active page replacement policy autonomously chosen by MEMORA's cost-benefit engine.">
+        <span class="pip gold" id="status-policy-pip"></span>
+        <span class="spec-label">POLICY:</span>
+        <strong class="spec-value highlight-gold" id="status-policy-text">LRU</strong>
       </div>
-      <div class="pill">
-        <span class="indicator cyan" id="status-phase-dot"></span>
-        <span>Phase: <strong id="status-phase-text" style="color:var(--cyan-neon)">INITIALIZING</strong></span>
+
+      <!-- Detected Phase -->
+      <div class="spec-pill" title="The current workload regime detected by sliding-window entropy and divergence analytics.">
+        <span class="pip titanium" id="status-phase-pip"></span>
+        <span class="spec-label">REGIME:</span>
+        <strong class="spec-value" id="status-phase-text">INITIALIZING</strong>
       </div>
-      <div class="pill">
-        <span class="indicator green" id="status-pg-dot"></span>
-        <span>PostgreSQL 17: <strong id="status-pg-text" style="color:var(--emerald-neon)">CONNECTED</strong></span>
+
+      <!-- PostgreSQL 17 Bridge Status -->
+      <div class="spec-pill" title="Live connection status with PostgreSQL 17 and pg_buffercache.">
+        <span class="pip teal" id="status-pg-pip"></span>
+        <span class="spec-label">PG 17:</span>
+        <strong class="spec-value" id="status-pg-text">CHECKING...</strong>
       </div>
+
+      <!-- Access Stream Progress -->
+      <div class="spec-pill" title="Total memory references replayed in this execution.">
+        <span class="spec-label">STREAM:</span>
+        <span class="spec-value font-mono" id="status-accesses">0</span>
+        <span class="stream-pct" id="status-progress">0%</span>
+      </div>
+    </div>
+
+    <!-- Navigation Deep Dives -->
+    <div class="nav-controls">
+      <button class="nav-action-btn" id="btn-open-codex" title="Explore every function, formula, and system component in the Project Codex">
+        <span>◫ Project Codex & Formulas</span>
+      </button>
+      <button class="nav-action-btn" id="btn-open-charts" title="Open multi-policy live performance comparison charts">
+        <span>📈 Telemetry Charts</span>
+      </button>
+      <button class="nav-action-btn primary" id="btn-run-python" title="Execute Python backend benchmark against PostgreSQL 17 pg_buffercache">
+        <span>⚡ Run PG17 Benchmark</span>
+      </button>
     </div>
   </header>
 
-  <!-- Left Controller: Workload & Replay Controls -->
-  <aside class="panel-left">
-    <div class="panel-header">
-      <span>Workload & Controls</span>
-      <span style="font-size:10px; color:var(--text-dim);">60 FPS WEBGL</span>
+  <!-- ================================================================
+       LEFT CONTROL DECK — WORKLOAD & PARAMETER ENGINEERING
+       Every control explains its physical and algorithmic role
+  ================================================================ -->
+  <aside class="deck-left" id="deck-left">
+    <div class="deck-title-row">
+      <div class="deck-title">WORKLOAD & EXPERIMENT PARAMETERS</div>
+      <div class="fps-indicator" id="fps-counter">60.0 FPS</div>
     </div>
 
-    <div class="control-group">
-      <div class="control-label">Workload Pattern</div>
-      <select id="workload-select" class="cyber-select">
-        <option value="phase_shift">Multi-Phase HTAP (Scan → Zipf → Recency)</option>
+    <!-- Workload Selector & Dynamic Pedagogical Explainer -->
+    <div class="control-block">
+      <div class="control-header">
+        <span class="label-text">1. WORKLOAD ACCESS PATTERN</span>
+        <span class="code-stamp">TRACE_INPUT</span>
+      </div>
+      <select id="workload-select" class="spec-select">
+        <option value="phase_shift">Multi-Phase HTAP (Scan → Zipfian → Recency)</option>
         <option value="pgbench">PostgreSQL TPC-B (pgbench) Transaction Stream</option>
-        <option value="sequential_flood">Sequential Table Scan Flood (Scan Pollution)</option>
-        <option value="zipfian">Skewed Zipfian Frequency (Frequency Stagnation)</option>
-        <option value="recency">Heavy Temporal Recency (Working Set)</option>
+        <option value="sequential_flood">Sequential Scan Flood (Cache Pollution Stress)</option>
+        <option value="zipfian">Skewed Zipfian Frequency (Hot-Page Stagnation)</option>
+        <option value="recency">Temporal Working-Set Recency Burst</option>
       </select>
-    </div>
-
-    <div class="control-group">
-      <div class="control-label">
-        <span>Buffer Pool Size (B)</span>
-        <span class="val" id="val-buffer-size">64 frames</span>
+      
+      <!-- Architectural Explainer Card for Selected Workload -->
+      <div class="workload-intel-card" id="workload-desc-card">
+        <div class="wic-header">
+          <span class="wic-dot"></span>
+          <span class="wic-title" id="wic-title">Multi-Phase HTAP Workload</span>
+        </div>
+        <p class="wic-body" id="workload-desc">
+          Cycles sequentially through three distinct database access regimes: analytical table scans, 
+          power-law Zipfian key lookups, and transactional working-set bursts. Demonstrates where MEMORA's 
+          autonomous policy switching outperforms any single static eviction policy.
+        </p>
+        <div class="wic-meta">
+          <span>FAVORED POLICIES: <strong id="wic-favored">FIFO → LFU → LRU</strong></span>
+        </div>
       </div>
-      <input type="range" id="slider-buffer-size" class="cyber-slider" min="16" max="128" step="16" value="64">
     </div>
 
-    <div class="control-group">
-      <div class="control-label">
-        <span>Replay Speed</span>
-        <span class="val" id="val-speed">20 accesses/sec</span>
+    <!-- Buffer Pool Capacity -->
+    <div class="control-block">
+      <div class="control-header">
+        <span class="label-text">2. BUFFER POOL CAPACITY (B)</span>
+        <span class="val-display" id="val-buffer-size">64 frames</span>
       </div>
-      <input type="range" id="slider-speed" class="cyber-slider" min="1" max="100" step="5" value="20">
-    </div>
-
-    <div class="control-group">
-      <div class="control-label">
-        <span>Cost Gate Threshold (γ)</span>
-        <span class="val" id="val-gate">+0.020 (2.0%)</span>
+      <input type="range" id="slider-buffer-size" class="spec-slider" min="16" max="128" step="16" value="64">
+      <div class="control-subtext">
+        <span>Memory footprint: <strong id="val-buffer-ram">512 KB</strong> (8 KB/page)</span>
+        <span class="param-tag">CAPACITY_B</span>
       </div>
-      <input type="range" id="slider-gate" class="cyber-slider" min="0.005" max="0.050" step="0.005" value="0.020">
     </div>
 
-    <div class="btn-row">
-      <button id="btn-play" class="btn btn-primary">
-        <span>▶ Start Replay</span>
+    <!-- Replay Velocity -->
+    <div class="control-block">
+      <div class="control-header">
+        <span class="label-text">3. SIMULATION FREQUENCY</span>
+        <span class="val-display" id="val-speed">25 ops/sec</span>
+      </div>
+      <input type="range" id="slider-speed" class="spec-slider" min="1" max="120" step="5" value="25">
+      <div class="control-subtext">
+        <span>Engine clock rate</span>
+        <span class="param-tag">CLK_HZ</span>
+      </div>
+    </div>
+
+    <!-- Cost-Benefit Gating Threshold -->
+    <div class="control-block">
+      <div class="control-header">
+        <span class="label-text">4. COST GATE THRESHOLD (γ)</span>
+        <span class="val-display" id="val-gate">+2.0%</span>
+      </div>
+      <input type="range" id="slider-gate" class="spec-slider" min="0.005" max="0.050" step="0.005" value="0.020">
+      <div class="control-subtext">
+        <span>Min. net hit-ratio improvement required to switch</span>
+        <span class="param-tag">GAMMA_GATE</span>
+      </div>
+    </div>
+
+    <!-- Anti-Thrashing Cooldown Period -->
+    <div class="control-block">
+      <div class="control-header">
+        <span class="label-text">5. HYSTERESIS COOLDOWN (C)</span>
+        <span class="val-display" id="val-cooldown">300 ops</span>
+      </div>
+      <input type="range" id="slider-cooldown" class="spec-slider" min="100" max="800" step="50" value="300">
+      <div class="control-subtext">
+        <span>Minimum access buffer between consecutive switches</span>
+        <span class="param-tag">COOLDOWN_C</span>
+      </div>
+    </div>
+
+    <!-- Simulation Transport Controls -->
+    <div class="transport-grid">
+      <button id="btn-play" class="transport-btn primary" title="Start or pause workload simulation stream">
+        <span id="play-btn-label">▶ Start Stream</span>
       </button>
-      <button id="btn-step" class="btn btn-secondary">
-        <span>⏭ Step</span>
+      <button id="btn-step" class="transport-btn" title="Step forward by exactly 1 access reference for forensic inspection">
+        <span>⏭ Single Step</span>
       </button>
-      <button id="btn-reset" class="btn btn-secondary">
+      <button id="btn-reset" class="transport-btn" title="Reset all buffer frames, statistics, and traces to initial state">
         <span>↺ Reset</span>
       </button>
     </div>
 
-    <div style="margin-top: 10px;">
-      <button id="btn-run-python" class="btn btn-secondary" style="width:100%; justify-content:center; border-color:var(--purple-neon); color:var(--purple-neon);">
-        <span>⚡ Run Backend Benchmark (Python + PG 17)</span>
-      </button>
-    </div>
-  </aside>
-
-  <!-- Right Metrics HUD: Hit Ratio, Disk I/O, Policy Ranking -->
-  <aside class="panel-right">
-    <!-- Live Hit Ratio Card -->
-    <div class="metric-card highlight">
-      <div class="metric-title">MEMORA Hit Ratio (Dynamic)</div>
-      <div class="metric-value-row">
-        <div class="metric-val green" id="metric-hit-ratio">0.00%</div>
-        <div class="metric-sub" id="metric-hit-delta">+0.0% vs Clock</div>
-      </div>
-      <div class="metric-bar-bg">
-        <div class="metric-bar-fill" id="metric-hit-bar" style="width: 0%;"></div>
+    <!-- Camera Perspective Presets -->
+    <div class="camera-cluster">
+      <div class="camera-cluster-label">3D OBSERVATION ANGLE</div>
+      <div class="camera-btn-group">
+        <button class="cam-btn active" data-cam="iso">Isometric</button>
+        <button class="cam-btn" data-cam="top">Top-Down</button>
+        <button class="cam-btn" data-cam="core">Arbiter Focus</button>
       </div>
     </div>
 
-    <!-- Storage Disk I/O Saved -->
-    <div class="metric-card">
-      <div class="metric-title">Storage Disk I/O Reduction</div>
-      <div class="metric-value-row">
-        <div class="metric-val cyan" id="metric-io-reduction">0.0%</div>
-        <div class="metric-sub" id="metric-io-saved" style="color:var(--cyan-neon);">0 ops saved</div>
+    <!-- Switching State Counter -->
+    <div class="switch-summary-strip">
+      <div class="sss-item">
+        <span class="sss-label">POLICY SWITCHES</span>
+        <span class="sss-value" id="switch-count">0</span>
       </div>
-      <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">
-        Compared directly to PostgreSQL Native Clock-Sweep
-      </div>
-    </div>
-
-    <!-- Comparative Policy Scoreboard -->
-    <div class="metric-card">
-      <div class="metric-title">Live Policy Scoreboard</div>
-      <div style="display:flex; flex-direction:column; gap:6px; margin-top:8px; font-family:var(--font-mono); font-size:12px;">
-        <div style="display:flex; justify-content:space-between; color:var(--purple-neon); font-weight:700;">
-          <span>1. MEMORA (Adaptive)</span>
-          <span id="score-memora">0.0%</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; color:var(--text-primary);">
-          <span>2. Static LRU</span>
-          <span id="score-lru">0.0%</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; color:var(--text-primary);">
-          <span>3. PostgreSQL CLOCK</span>
-          <span id="score-clock">0.0%</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; color:var(--text-primary);">
-          <span>4. Static LFU</span>
-          <span id="score-lfu">0.0%</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; color:var(--text-muted);">
-          <span>5. Static FIFO</span>
-          <span id="score-fifo">0.0%</span>
-        </div>
+      <div class="sss-divider"></div>
+      <div class="sss-item">
+        <span class="sss-label">THRASHING EVENTS</span>
+        <span class="sss-value zero" id="thrash-count">0 GUARDED</span>
       </div>
     </div>
   </aside>
 
-  <!-- 3D Canvas Legend Overlay -->
-  <div class="legend-overlay">
-    <div class="legend-item"><div class="dot cyan"></div> Clean Page</div>
-    <div class="legend-item"><div class="dot emerald"></div> Cache Hit</div>
-    <div class="legend-item"><div class="dot crimson"></div> Cache Miss / Eviction</div>
-    <div class="legend-item"><div class="dot amber"></div> Dirty Page</div>
-    <div class="legend-item"><div class="dot purple"></div> Arbiter Gyroscope</div>
+  <!-- ================================================================
+       RIGHT TELEMETRY DECK — HIT RATIO & COMPARATIVE SCOREBOARD
+       Live multi-policy benchmarking vs PostgreSQL 17 native Clock
+  ================================================================ -->
+  <aside class="deck-right" id="deck-right">
+    
+    <!-- Primary Metric: MEMORA Adaptive Hit Ratio -->
+    <div class="telemetry-card primary-gauge">
+      <div class="card-supertitle">ADAPTIVE BUFFER POOL EFFICIENCY</div>
+      <div class="gauge-main-row">
+        <div class="gauge-val" id="metric-hit-ratio">0.00%</div>
+        <div class="gauge-delta-chip" id="metric-hit-delta">+0.00% vs PG Clock</div>
+      </div>
+      <div class="spec-bar-track">
+        <div class="spec-bar-fill" id="metric-hit-bar" style="width: 0%;"></div>
+      </div>
+      <div class="card-caption">
+        Autonomous policy optimization reduces page faults and storage disk fetches.
+      </div>
+    </div>
+
+    <!-- Storage Disk I/O Reduction Card -->
+    <div class="telemetry-card">
+      <div class="card-supertitle">STORAGE SUBSYSTEM I/O MITIGATION</div>
+      <div class="io-metrics-row">
+        <div>
+          <div class="io-large-val" id="metric-io-reduction">0.0%</div>
+          <div class="io-subtext">DISK I/O REDUCTION</div>
+        </div>
+        <div class="io-ops-saved">
+          <div class="io-saved-count" id="metric-io-saved">0 ops</div>
+          <div class="io-subtext">READS/WRITES SAVED</div>
+        </div>
+      </div>
+      <div class="card-caption">
+        Directly benchmarked against PostgreSQL 17 native Clock-Sweep algorithm.
+      </div>
+    </div>
+
+    <!-- Multi-Policy Real-Time Scoreboard -->
+    <div class="telemetry-card scoreboard-card">
+      <div class="scoreboard-header">
+        <span class="card-supertitle">POLICY COMPETITION MATRIX</span>
+        <span class="sb-live-indicator">● LIVE METRICS</span>
+      </div>
+
+      <div class="policy-scoreboard-list">
+        <!-- 1. MEMORA -->
+        <div class="sb-item leader">
+          <div class="sb-rank">01</div>
+          <div class="sb-details">
+            <div class="sb-title-row">
+              <span class="sb-name">MEMORA <em>Adaptive</em></span>
+              <span class="sb-pct" id="score-memora">0.00%</span>
+            </div>
+            <div class="sb-track"><div class="sb-bar gold" id="bar-memora" style="width: 0%;"></div></div>
+          </div>
+        </div>
+
+        <!-- 2. PostgreSQL Clock-Sweep -->
+        <div class="sb-item">
+          <div class="sb-rank">02</div>
+          <div class="sb-details">
+            <div class="sb-title-row">
+              <span class="sb-name">PostgreSQL 17 Clock-Sweep</span>
+              <span class="sb-pct" id="score-clock">0.00%</span>
+            </div>
+            <div class="sb-track"><div class="sb-bar titanium" id="bar-clock" style="width: 0%;"></div></div>
+          </div>
+        </div>
+
+        <!-- 3. Static LRU -->
+        <div class="sb-item">
+          <div class="sb-rank">03</div>
+          <div class="sb-details">
+            <div class="sb-title-row">
+              <span class="sb-name">Static LRU (Least Recently Used)</span>
+              <span class="sb-pct" id="score-lru">0.00%</span>
+            </div>
+            <div class="sb-track"><div class="sb-bar blue" id="bar-lru" style="width: 0%;"></div></div>
+          </div>
+        </div>
+
+        <!-- 4. Static LFU -->
+        <div class="sb-item">
+          <div class="sb-rank">04</div>
+          <div class="sb-details">
+            <div class="sb-title-row">
+              <span class="sb-name">Static LFU (Least Frequently Used)</span>
+              <span class="sb-pct" id="score-lfu">0.00%</span>
+            </div>
+            <div class="sb-track"><div class="sb-bar emerald" id="bar-lfu" style="width: 0%;"></div></div>
+          </div>
+        </div>
+
+        <!-- 5. Static FIFO -->
+        <div class="sb-item">
+          <div class="sb-rank">05</div>
+          <div class="sb-details">
+            <div class="sb-title-row">
+              <span class="sb-name">Static FIFO (First-In First-Out)</span>
+              <span class="sb-pct" id="score-fifo">0.00%</span>
+            </div>
+            <div class="sb-track"><div class="sb-bar amber" id="bar-fifo" style="width: 0%;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Access Stream Mini-Oscilloscope -->
+    <div class="telemetry-card oscilloscope-card">
+      <div class="osc-header">
+        <span class="card-supertitle">ACCESS STREAM OSCILLOSCOPE</span>
+        <span class="osc-tag">Δ PAGE_ID</span>
+      </div>
+      <canvas id="stream-waveform" class="stream-canvas" width="310" height="48"></canvas>
+      <div class="osc-legend">
+        <span>Temporal Access Trajectory</span>
+        <span id="osc-page-info">Awaiting access...</span>
+      </div>
+    </div>
+
+    <!-- Session Diagnostics Summary Grid -->
+    <div class="telemetry-card diagnostics-card">
+      <div class="card-supertitle">CACHE CONTROLLER DIAGNOSTICS</div>
+      <div class="diag-grid">
+        <div class="diag-cell">
+          <span class="diag-lbl">BUFFER HITS</span>
+          <span class="diag-val emerald" id="stat-hits">0</span>
+        </div>
+        <div class="diag-cell">
+          <span class="diag-lbl">PAGE FAULTS</span>
+          <span class="diag-val crimson" id="stat-misses">0</span>
+        </div>
+        <div class="diag-cell">
+          <span class="diag-lbl">STORAGE READS</span>
+          <span class="diag-val" id="stat-disk-reads">0</span>
+        </div>
+        <div class="diag-cell">
+          <span class="diag-lbl">DIRTY FLUSHES</span>
+          <span class="diag-val amber" id="stat-disk-writes">0</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ================================================================
+       3D SCENE MATERIAL LEGEND
+       Minimal specimen indicators for buffer matrix state
+  ================================================================ -->
+  <div class="specimen-legend">
+    <div class="specimen-label">[ MATRIX SPECIMENS ]</div>
+    <div class="specimen-items">
+      <div class="specimen"><span class="chip-dot clean"></span> Clean Frame</div>
+      <div class="specimen"><span class="chip-dot hit"></span> Cache Hit</div>
+      <div class="specimen"><span class="chip-dot miss"></span> Fault / Evict</div>
+      <div class="specimen"><span class="chip-dot dirty"></span> Dirty Modified</div>
+      <div class="specimen"><span class="chip-dot arbiter"></span> Arbiter Gyroscope</div>
+    </div>
   </div>
 
-  <!-- Bottom Intelligence & Decision Timeline HUD -->
-  <footer class="panel-bottom">
-    <div class="intel-box">
-      <div class="intel-title">Shannon Access Entropy (H)</div>
-      <div class="intel-score">
-        <span id="intel-entropy">0.000</span>
-        <span style="font-size:12px; color:var(--text-muted);">/ 1.0</span>
+  <!-- ================================================================
+       BOTTOM INTELLIGENCE HUD — ALGORITHMIC SIGNALS & DECISION FEED
+       Mathematical formulation of every phase detection metric
+  ================================================================ -->
+  <footer class="deck-bottom" id="deck-bottom">
+    
+    <!-- Shannon Access Entropy H(X) -->
+    <div class="intel-cell" title="Shannon Entropy H(X) = -Σ p(x) log₂(p(x)), normalized by log₂(N). Quantifies spatial access skew. Low H indicates heavy skew toward hot pages (favoring LFU). High H indicates uniform access distribution.">
+      <div class="intel-cell-header">
+        <span class="ic-title">SHANNON ENTROPY H(X)</span>
+        <span class="ic-formula">H = -Σ p log₂ p</span>
       </div>
-      <div class="intel-desc" id="intel-entropy-desc">Spatial access concentration</div>
+      <div class="ic-score-row">
+        <span class="ic-score font-mono" id="intel-entropy">0.000</span>
+        <span class="ic-scale">/ 1.000</span>
+      </div>
+      <div class="ic-gauge-bg"><div class="ic-gauge-fill gold" id="bar-entropy" style="width: 0%;"></div></div>
+      <div class="ic-desc" id="intel-entropy-desc">Spatial distribution concentration</div>
     </div>
 
-    <div class="intel-box">
-      <div class="intel-title">Jensen-Shannon Divergence (JSD)</div>
-      <div class="intel-score">
-        <span id="intel-jsd">0.000</span>
-        <span style="font-size:12px; color:var(--text-muted);">/ 1.0</span>
+    <!-- Jensen-Shannon Divergence JSD(P || Q) -->
+    <div class="intel-cell" title="Jensen-Shannon Divergence measures probability distribution drift between sliding windows: JSD(P||Q) = 0.5 D_KL(P||M) + 0.5 D_KL(Q||M). Values > 0.28 indicate an active workload phase shift.">
+      <div class="intel-cell-header">
+        <span class="ic-title">JENSEN-SHANNON DIVERGENCE</span>
+        <span class="ic-formula">JSD(P ∥ Q)</span>
       </div>
-      <div class="intel-desc" id="intel-jsd-desc">Probability distribution shift</div>
+      <div class="ic-score-row">
+        <span class="ic-score font-mono" id="intel-jsd">0.000</span>
+        <span class="ic-scale">/ 1.000</span>
+      </div>
+      <div class="ic-gauge-bg"><div class="ic-gauge-fill teal" id="bar-jsd" style="width: 0%;"></div></div>
+      <div class="ic-desc" id="intel-jsd-desc">Temporal regime drift detector</div>
     </div>
 
-    <div class="intel-box">
-      <div class="intel-title">Stride-1 Sequentiality</div>
-      <div class="intel-score">
-        <span id="intel-seq">0.0%</span>
+    <!-- Stride-1 Sequentiality Ratio -->
+    <div class="intel-cell" title="Detects sequential access strides: S₁ = |{i : page_i = page_{i-1} + 1}| / (N - 1). Above 40% sequentiality, MEMORA triggers FIFO to isolate scans and protect the cache against pollution.">
+      <div class="intel-cell-header">
+        <span class="ic-title">STRIDE-1 SEQUENTIALITY</span>
+        <span class="ic-formula">S₁ = Σ[Δp = 1] / N</span>
       </div>
-      <div class="intel-desc" id="intel-seq-desc">Sequential table scan detector</div>
+      <div class="ic-score-row">
+        <span class="ic-score font-mono" id="intel-seq">0.0%</span>
+        <span class="ic-scale">SCAN RATIO</span>
+      </div>
+      <div class="ic-gauge-bg"><div class="ic-gauge-fill amber" id="bar-seq" style="width: 0%;"></div></div>
+      <div class="ic-desc" id="intel-seq-desc">Sequential scan & pollution detector</div>
     </div>
 
-    <div class="intel-box">
-      <div class="intel-title">Autonomous Policy Decision Feed</div>
-      <div class="event-log-container" id="event-log">
-        <div class="log-item">
-          <span>Access 0: Initialized Buffer Pool with 64 resident frames.</span>
-          <span style="color:var(--text-dim)">Ready</span>
+    <!-- Autonomous Cost-Benefit Decision Feed -->
+    <div class="intel-cell decision-feed-cell">
+      <div class="intel-cell-header">
+        <span class="ic-title">AUTONOMOUS ARBITER TRANSITION FEED</span>
+        <span class="ic-counter" id="log-count">0 EVENTS</span>
+      </div>
+      <div class="decision-feed-list" id="event-log">
+        <div class="feed-item init">
+          <span class="feed-pip">●</span>
+          <span class="feed-text">Buffer matrix initialized with 64 resident frames. Ready for workload replay.</span>
         </div>
       </div>
     </div>
   </footer>
 
-  <!-- Main 3D & Simulation Controller Application Script -->
+  <!-- ================================================================
+       SYSTEM CODEX & ARCHITECTURAL REFERENCE MODAL
+       Comprehensive mathematical and functional documentation of MEMORA
+  ================================================================ -->
+  <div id="codex-modal" class="modal-backdrop hidden">
+    <div class="modal-surface codex-surface">
+      <button class="modal-close-btn" id="close-codex" aria-label="Close Codex">✕</button>
+      
+      <div class="codex-header">
+        <div class="codex-label">[ MEMORA COMPENDIUM // ARCHITECTURAL SYSTEM CODEX ]</div>
+        <h2 class="codex-title">Workload-Aware Adaptive Buffer Pool Management</h2>
+        <div class="codex-byline">
+          Empirical Database Research · PostgreSQL 17 Validation · Dynamic Multi-Policy Arbitration
+        </div>
+      </div>
+
+      <div class="codex-body">
+        
+        <!-- SECTION 1: Executive Overview -->
+        <section class="codex-section">
+          <h3 class="section-heading">1. Project Mission & Foundational Problem</h3>
+          <p>
+            Modern database management systems (DBMS) such as PostgreSQL rely on static buffer replacement 
+            algorithms—most commonly <strong>Clock-Sweep</strong> (a circular-queue approximation of Second-Chance LRU) 
+            or classical <strong>LRU</strong>. While performant for general-purpose transactional workloads, 
+            static algorithms fundamentally suffer from pathological degradation under mixed or phase-shifting 
+            HTAP (Hybrid Transactional/Analytical Processing) workloads:
+          </p>
+          <div class="problem-grid">
+            <div class="problem-card">
+              <div class="pc-title">The Scan Pollution Vulnerability</div>
+              <p>
+                A single bulk analytical table scan (e.g. <code>SELECT * FROM orders</code>) floods the buffer 
+                pool with one-touch pages, evicting frequently accessed index pages and hot transactional rows. 
+                Static LRU takes hundreds of accesses to recover its working set.
+              </p>
+            </div>
+            <div class="problem-card">
+              <div class="pc-title">Frequency Stagnation</div>
+              <p>
+                Static LFU maintains high hit rates for Zipfian skewed queries, but fails completely when workload 
+                regimes transition: stale pages with accumulated historical counts remain permanently cached, 
+                blocking newly active working sets from residence.
+              </p>
+            </div>
+            <div class="problem-card">
+              <div class="pc-title">The Thrashing Threat</div>
+              <p>
+                Naive adaptive cache systems that switch policies frequently suffer from <em>thrashing</em>: 
+                the transient cold misses and reorganization overhead during policy transition can exceed the 
+                benefit of the new policy, deteriorating overall throughput.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 2: Subsystem Functions Explained -->
+        <section class="codex-section">
+          <h3 class="section-heading">2. Comprehensive Engine Subsystems & Function Codex</h3>
+          <p class="section-subtext">Every core Python module and mathematical function within the MEMORA architecture:</p>
+          
+          <div class="function-table-wrap">
+            <table class="function-table">
+              <thead>
+                <tr>
+                  <th>FUNCTION / CLASS</th>
+                  <th>SOURCE MODULE</th>
+                  <th>MATHEMATICAL ROLE & EXPLANATION</th>
+                  <th>INPUT / OUTPUT</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="fn-name"><code>PhaseDetector.detect_phase()</code></td>
+                  <td class="fn-mod"><code>memora.detector.phase_detector</code></td>
+                  <td>
+                    Maintains a sliding window of accesses ($W = 250$). Computes normalized <strong>Shannon Entropy</strong> 
+                    $H(X)$, <strong>Jensen-Shannon Divergence</strong> $JSD(P \parallel Q)$, and <strong>Stride-1 Sequentiality</strong>. 
+                    Classifies workload regime into <em>Sequential</em>, <em>Frequency-Heavy</em>, or <em>Recency-Heavy</em>.
+                  </td>
+                  <td class="fn-io">In: <code>List[AccessRecord]</code><br>Out: <code>PhaseDetectionResult</code></td>
+                </tr>
+                <tr>
+                  <td class="fn-name"><code>CostBenefitEngine.evaluate_switch()</code></td>
+                  <td class="fn-mod"><code>memora.decision.engine</code></td>
+                  <td>
+                    Computes the analytical net-benefit inequality:
+                    <div class="inline-formula">$\text{NetBenefit} = \Delta H_{\text{expected}} - C_{\text{switching}} \ge \gamma$</div>
+                    Guarantees that a policy switch is only executed if projected hit-ratio gain exceeds the cold-miss penalty.
+                  </td>
+                  <td class="fn-io">In: <code>active, target, pool_size</code><br>Out: <code>Decision(approved=bool)</code></td>
+                </tr>
+                <tr>
+                  <td class="fn-name"><code>AdaptiveController.step()</code></td>
+                  <td class="fn-mod"><code>memora.adaptive.controller</code></td>
+                  <td>
+                    Central arbiter state machine. Enforces the hysteresis cooldown timer ($C$ accesses) after 
+                    every policy switch, eliminating rapid oscillation (anti-thrashing). Dispatches page requests 
+                    to the active eviction policy without dropping resident pool contents.
+                  </td>
+                  <td class="fn-io">In: <code>page_id, is_write</code><br>Out: <code>AccessResult(hit=bool)</code></td>
+                </tr>
+                <tr>
+                  <td class="fn-name"><code>BufferPool.access()</code></td>
+                  <td class="fn-mod"><code>memora.simulator.replay_engine</code></td>
+                  <td>
+                    Manages resident memory frames. On cache hit, updates usage metadata. On cache miss, invokes the 
+                    active eviction policy's victim selection, tracks dirty page writes, and loads the target page.
+                  </td>
+                  <td class="fn-io">In: <code>page_id, is_write</code><br>Out: <code>bool (hit/miss)</code></td>
+                </tr>
+                <tr>
+                  <td class="fn-name"><code>PostgresComparator.run_comparison()</code></td>
+                  <td class="fn-mod"><code>memora.postgres.trace_bridge</code></td>
+                  <td>
+                    Executes synchronized comparative benchmarks across MEMORA, PostgreSQL Clock-Sweep, LRU, LFU, 
+                    and FIFO on identical access traces. Computes relative disk I/O savings and hit-ratio differentials.
+                  </td>
+                  <td class="fn-io">In: <code>Trace, buffer_size</code><br>Out: <code>Dict[str, RunMetrics]</code></td>
+                </tr>
+                <tr>
+                  <td class="fn-name"><code>PostgresBufferCollector</code></td>
+                  <td class="fn-mod"><code>memora.postgres.collector</code></td>
+                  <td>
+                    Inspects live local PostgreSQL 17 instances using the <code>pg_buffercache</code> extension. 
+                    Queries resident buffer states, dirty buffer counts, and relation-level buffer distribution.
+                  </td>
+                  <td class="fn-io">In: <code>PostgresConfig</code><br>Out: <code>BufferCacheSummary</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- SECTION 3: Mathematical Formulations -->
+        <section class="codex-section">
+          <h3 class="section-heading">3. Mathematical Formulations & Policy Decision Engine</h3>
+          <div class="math-columns">
+            <div class="math-box">
+              <div class="math-box-title">I. Normalized Shannon Entropy</div>
+              <div class="math-eq">
+                $$H(W) = -\frac{1}{\log_2 |U|} \sum_{p \in U} P(p) \log_2 P(p)$$
+              </div>
+              <p>Where $U$ is the set of unique pages in window $W$. When $H \to 0$, access is concentrated on a small set of hot pages (favoring LFU). When $H \to 1$, access is uniform.</p>
+            </div>
+
+            <div class="math-box">
+              <div class="math-box-title">II. Jensen-Shannon Divergence</div>
+              <div class="math-eq">
+                $$D_{\text{JS}}(P \parallel Q) = \frac{1}{2} D_{\text{KL}}(P \parallel M) + \frac{1}{2} D_{\text{KL}}(Q \parallel M)$$
+              </div>
+              <p>Where $M = \frac{1}{2}(P + Q)$. Measures distribution drift between window $W_t$ and $W_{t-1}$. A spike above threshold $\tau = 0.28$ indicates a workload phase boundary.</p>
+            </div>
+
+            <div class="math-box">
+              <div class="math-box-title">III. Cost-Benefit Switching Gate</div>
+              <div class="math-eq">
+                $$\text{NetBenefit} = \Delta H_{\text{exp}} - \left( \alpha \cdot \frac{B}{B_{\text{ref}}} \right) \ge \gamma$$
+              </div>
+              <p>Where $B$ is buffer capacity, $B_{\text{ref}} = 64$, and $\gamma \ge 0.020$. Ensures policy switches are mathematically profitable before committing.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 4: Eviction Policy Matrix -->
+        <section class="codex-section">
+          <h3 class="section-heading">4. Replacement Policy Taxonomy</h3>
+          <div class="taxonomy-grid">
+            <div class="tax-card">
+              <div class="tax-header"><span class="chip-dot blue"></span> <strong>LRU (Least Recently Used)</strong></div>
+              <div class="tax-sub">Time Complexity: $\mathcal{O}(1)$ with doubly-linked list</div>
+              <p>Evicts the page whose last access timestamp is oldest. Optimal for strong temporal locality. Vulnerable to sequential scan pollution.</p>
+            </div>
+            <div class="tax-card">
+              <div class="tax-header"><span class="chip-dot emerald"></span> <strong>LFU (Least Frequently Used)</strong></div>
+              <div class="tax-sub">Time Complexity: $\mathcal{O}(1)$ with frequency bucket list</div>
+              <p>Evicts the page with the lowest cumulative access count. Optimal for Zipfian hot-page distributions. Suffers from frequency stagnation when workloads shift.</p>
+            </div>
+            <div class="tax-card">
+              <div class="tax-header"><span class="chip-dot amber"></span> <strong>FIFO (First-In First-Out)</strong></div>
+              <div class="tax-sub">Time Complexity: $\mathcal{O}(1)$ with circular queue</div>
+              <p>Evicts the oldest page resident in the buffer pool. Immune to scan pollution during table scans because non-reused pages pass through without evicting hot sets.</p>
+            </div>
+            <div class="tax-card">
+              <div class="tax-header"><span class="chip-dot titanium"></span> <strong>PostgreSQL 17 Clock-Sweep</strong></div>
+              <div class="tax-sub">Time Complexity: Amortized $\mathcal{O}(1)$ circular scan</div>
+              <p>Maintains usage counts (0 to 5) per frame. A rotating hand decrements counts until finding a zero-count victim. The real-world production baseline.</p>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================
+       PERFORMANCE CHARTS MODAL
+       Live multi-policy line charts powered by Chart.js
+  ================================================================ -->
+  <div id="charts-modal" class="modal-backdrop hidden">
+    <div class="modal-surface charts-surface">
+      <button class="modal-close-btn" id="close-charts" aria-label="Close Charts">✕</button>
+      
+      <div class="codex-header">
+        <div class="codex-label">[ TELEMETRY BENCHMARKING // REAL-TIME SYSTEM PERFORMANCE ]</div>
+        <h2 class="codex-title">Live Cache Hit Ratio & Phase Signal Trajectories</h2>
+      </div>
+
+      <div class="charts-container-grid">
+        <div class="chart-panel">
+          <div class="chart-panel-header">
+            <span>HIT RATIO OVER TIME (ALL POLICIES)</span>
+            <span class="chart-stat-pill">CUMULATIVE EFFICIENCY</span>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="chart-hit-ratio" height="220"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-panel">
+          <div class="chart-panel-header">
+            <span>ALGORITHMIC PHASE SIGNALS</span>
+            <span class="chart-stat-pill">ENTROPY / JSD / SEQUENTIALITY</span>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="chart-signals" height="220"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================
+       PYTHON BENCHMARK RESULTS MODAL
+       Detailed report generated by /api/benchmark against real PG 17 traces
+  ================================================================ -->
+  <div id="bench-modal" class="modal-backdrop hidden">
+    <div class="modal-surface bench-surface">
+      <button class="modal-close-btn" id="close-bench" aria-label="Close Benchmark">✕</button>
+      
+      <div class="codex-header">
+        <div class="codex-label">[ PYTHON ENGINE BENCHMARK // POSTGRESQL COMPARISON ]</div>
+        <h2 class="codex-title">Synchronized Multi-Policy Benchmark Results</h2>
+      </div>
+
+      <div id="bench-results-content" class="bench-body">
+        <!-- Rendered dynamically by app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Core Simulation Application Engine -->
   <script src="app.js"></script>
 </body>
 </html>
